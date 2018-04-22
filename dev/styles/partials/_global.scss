@@ -2,6 +2,11 @@ body {
     background: darkcyan;
 }
 
-#canvas {
+#finalCanvas {
     background: #fff;
+}
+
+#animationCanvas {
+    position: absolute;
+    background: transparent;
 }

@@ -3,34 +3,63 @@ let flashcard = {}
 flashcard.isDrawing = false
 flashcard.lastX = 0
 flashcard.lastY = 0
-flashcard.whichShape = 'drawLine'
+flashcard.whichShape = 'drawPen'
 
-// create the drawing canvas and context
-const canvas = $('<canvas>')
-                .attr('id', 'canvas')
+// create the animation canvas, for tracking movement of lines and pen
+const animationCanvas = $('<canvas>')
+                .attr('id', 'animationCanvas')
                 .attr('height', '400px')
                 .attr('width', '600px')
-$('body').append(canvas)
+$('body').append(animationCanvas)
 
-// create 2d context
-const ctx = canvas[0].getContext('2d')
-ctx.lineJoin = 'round'
-ctx.lineCap = 'round'
-ctx.lineWidth = '3'
+// create the final canvas, to store all strokes during animation
+const finalCanvas = $('<canvas>')
+  .attr('id', 'finalCanvas')
+  .attr('height', '400px')
+  .attr('width', '600px')
+$('body').append(finalCanvas)
 
-flashcard.drawLine = function (e) {
+
+// create 2d context for animation context
+const actx = animationCanvas[0].getContext('2d')
+actx.lineJoin = 'round'
+actx.lineCap = 'round'
+actx.lineWidth = '3'
+
+// create 2d context for final canvas
+const fctx = finalCanvas[0].getContext('2d')
+fctx.lineJoin = 'round'
+fctx.lineCap = 'round'
+fctx.lineWidth = '3'
+
+
+flashcard.drawPen = function (e, context) {
   if(!flashcard.isDrawing) return
-  ctx.beginPath()
-  ctx.moveTo(flashcard.lastX, flashcard.lastY)
-  ctx.lineTo(e.offsetX, e.offsetY)
-  ctx.stroke()
+  context.beginPath()
+  context.moveTo(flashcard.lastX, flashcard.lastY)
+  context.lineTo(e.offsetX, e.offsetY)
+  context.stroke()
+}
+
+flashcard.updateLastPositions = function(e) {
   flashcard.lastX = e.offsetX
   flashcard.lastY = e.offsetY
 }
 
-flashcard.drawC = function (e) {
-  ctx.font = '18px serif'
-  ctx.strokeText('C', e.offsetX, e.offsetY)
+flashcard.drawLine = function (e, context) {
+  context.beginPath()
+  context.moveTo(flashcard.lastX, flashcard.lastY)
+  context.lineTo(e.offsetX, e.offsetY)
+  context.stroke()
+}
+
+flashcard.drawC = function (e, context) {
+  context.font = '18px serif'
+  context.strokeText('C', e.offsetX, e.offsetY)
+}
+
+flashcard.clearCanvas = function (context) {
+  context.clearRect(0, 0, 600, 400)
 }
 
 flashcard.addControls = function () {
@@ -39,6 +68,10 @@ flashcard.addControls = function () {
                         .addClass('clearButton')
   $('body').append(clearButton)
 
+  const penButton = $('<button>')
+                      .html('pen')
+                      .addClass('penButton')
+  $('body').append(penButton)
   const lineButton = $('<button>')
                       .html('line')
                       .addClass('lineButton')
@@ -54,29 +87,48 @@ flashcard.addControls = function () {
 
 
 flashcard.addEventListeners = function () {
-  $('#canvas').on('mousemove', function (e) {
-    if (flashcard.whichShape === 'drawLine') {
-      flashcard.drawLine(e)
+  $('#animationCanvas').on('mousemove', function (e) {
+    if (flashcard.whichShape === 'drawPen') {
+      flashcard.drawPen(e, actx)
+      flashcard.clearCanvas(actx)
+      flashcard.drawPen(e, fctx)
+      flashcard.updateLastPositions(e)
+    }
+    if (flashcard.whichShape === 'drawLine' && flashcard.isDrawing) {
+      flashcard.drawLine(e, actx)
+      flashcard.clearCanvas(actx)
+      flashcard.drawLine(e, actx)
     }
   })
-  $('#canvas').on('click', function (e) {
-    if (flashcard.whichShape !== 'drawLine') {
-      flashcard[flashcard.whichShape](e)
+  $('#animationCanvas').on('click', function (e) {
+    if (flashcard.whichShape === 'drawC') {
+      flashcard[flashcard.whichShape](e, fctx)
     }
   })
 
-  $('#canvas').on('mousedown', function (e) {
+  $('#animationCanvas').on('mousedown', function (e) {
     flashcard.isDrawing = true
-    flashcard.lastX = e.offsetX
-    flashcard.lastY = e.offsetY
+    if (flashcard.which === 'drawLine') {
+      actx.beginPath()
+    }
+    flashcard.updateLastPositions(e)
   })
-  $('#canvas').on('mouseup', () => flashcard.isDrawing = false)
-  $('#canvas').on('mouseout', () => flashcard.isDrawing = false)
+
+  $('#animationCanvas').on('mouseup', function (e) {
+    flashcard.isDrawing = false
+    if (flashcard.whichShape === 'drawLine') {
+      flashcard.clearCanvas(actx)
+      flashcard.drawLine(e, fctx)
+    }
+  })
+
+  $('#animationCanvas').on('mouseout', () => flashcard.isDrawing = false)
 
   $('.clearButton').on('click', function () {
-    ctx.clearRect(0, 0, 600, 400)
+    flashcard.clearCanvas(fctx)
   })
 
+  $('.penButton').on('click', () => flashcard.whichShape = 'drawPen')
   $('.lineButton').on('click', () => flashcard.whichShape = 'drawLine')
   $('.cButton').on('click', () => flashcard.whichShape = 'drawC')
 }
