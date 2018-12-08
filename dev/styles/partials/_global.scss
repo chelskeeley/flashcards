@@ -1,12 +1,15 @@
+
 body {
-    background: darkcyan;
+    // background-color: darkcyan !important;
+    min-height: calc(100vh - 30px);
+    position: relative;
 }
 
-#finalCanvas {
-    background: #fff;
+.btn-primary {
+    background-color: $tertiary !important;
+    color: $primary !important;
 }
 
-#animationCanvas {
-    position: absolute;
-    background: transparent;
+.btn-outline-primary {
+    border: 1px solid $primary !important;
 }

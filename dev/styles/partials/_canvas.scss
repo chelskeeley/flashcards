@@ -1,0 +1,14 @@
+#finalCanvas {
+    background: #fff;
+}
+
+#animationCanvas {
+    position: absolute;
+    background: transparent;
+}
+
+#finalCanvas,
+#animationCanvas {
+  border-radius: 5px;
+  border: 1px solid $primary;
+}

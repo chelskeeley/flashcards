@@ -7,17 +7,17 @@ flashcard.whichShape = 'drawPen'
 
 // create the animation canvas, for tracking movement of lines and pen
 const animationCanvas = $('<canvas>')
-                .attr('id', 'animationCanvas')
-                .attr('height', '400px')
-                .attr('width', '600px')
-$('body').append(animationCanvas)
+  .attr('id', 'animationCanvas')
+  .attr('height', '400px')
+  .attr('width', '600px')
+// $('main').append(animationCanvas)
 
 // create the final canvas, to store all strokes during animation
 const finalCanvas = $('<canvas>')
   .attr('id', 'finalCanvas')
   .attr('height', '400px')
   .attr('width', '600px')
-$('body').append(finalCanvas)
+// $('main').append(finalCanvas)
 
 
 // create 2d context for animation context
@@ -62,25 +62,41 @@ flashcard.clearCanvas = function (context) {
   context.clearRect(0, 0, 600, 400)
 }
 
+flashcard.addContainers = function() {
+  const canvasContainer = $('<div>')
+    .addClass('canvasContainer')
+  $('main').append(canvasContainer)
+
+  const controlToolbar = $('<div>')
+    .addClass('controlToolbar')
+  $('main').append(controlToolbar)
+}
+
+flashcard.configureCanvas = function() {
+  $('.canvasContainer').append(animationCanvas)
+  $('.canvasContainer').append(finalCanvas)
+}
+
 flashcard.addControls = function () {
   const clearButton = $('<button>')
-                        .html('Clear')
-                        .addClass('clearButton')
-  $('body').append(clearButton)
+    .html('Clear')
+    .addClass('clearButton btn btn-primary btn-outline-primary')
+  $('.controlToolbar').append(clearButton)
 
   const penButton = $('<button>')
-                      .html('pen')
-                      .addClass('penButton')
-  $('body').append(penButton)
+    .html('pen')
+    .addClass('penButton btn btn-primary ml-2 btn-outline-primary')
+  $('.controlToolbar').append(penButton)
+
   const lineButton = $('<button>')
-                      .html('line')
-                      .addClass('lineButton')
-  $('body').append(lineButton)
+    .html('line')
+    .addClass('lineButton btn btn-primary ml-2 btn-outline-primary')
+  $('.controlToolbar').append(lineButton)
 
   const cButton = $('<button>')
-                    .html('C')
-                    .addClass('cButton')
-  $('body').append(cButton)
+    .html('C')
+    .addClass('cButton btn btn-primary ml-2 btn-outline-primary')
+  $('.controlToolbar').append(cButton)
 }
 
 
@@ -94,10 +110,18 @@ flashcard.addEventListeners = function () {
       flashcard.drawPen(e, fctx)
       flashcard.updateLastPositions(e)
     }
+
     if (flashcard.whichShape === 'drawLine' && flashcard.isDrawing) {
       flashcard.drawLine(e, actx)
       flashcard.clearCanvas(actx)
       flashcard.drawLine(e, actx)
+    }
+
+    if (flashcard.whichShape === 'drawC') {
+      flashcard[flashcard.whichShape](e, actx)
+      flashcard.clearCanvas(actx)
+      flashcard[flashcard.whichShape](e, actx)
+
     }
   })
   $('#animationCanvas').on('click', function (e) {
@@ -122,7 +146,10 @@ flashcard.addEventListeners = function () {
     }
   })
 
-  $('#animationCanvas').on('mouseout', () => flashcard.isDrawing = false)
+  $('#animationCanvas').on('mouseout', () => {
+    flashcard.isDrawing = false
+    flashcard.clearCanvas(actx)
+  })
 
   $('.clearButton').on('click', function () {
     flashcard.clearCanvas(fctx)
@@ -136,8 +163,8 @@ flashcard.addEventListeners = function () {
 
 
 flashcard.init = function () {
-  const title = $('<h2>').text('I did it!! Yaaayy');
-  $('body').append(title)
+  flashcard.addContainers()
+  flashcard.configureCanvas()
   flashcard.addControls()
   flashcard.addEventListeners()
 }
